@@ -1,0 +1,192 @@
+{% extends "base.html" %} {% block title %}Patients · Handy EHR{% endblock %} {%
+block content %}
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Patients</h2>
+    <p class="page-sub">
+      Queue + history. Symptoms are displayed for fast triage.
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
+      <i class="bi bi-plus-circle me-1"></i> Add Patient
+    </a>
+  </div>
+</div>
+
+<div class="cardx p-4">
+  <ul class="nav nav-pills mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link active"
+        data-bs-toggle="pill"
+        data-bs-target="#upcoming"
+        type="button"
+        role="tab"
+      >
+        <i class="bi bi-calendar2-week me-1"></i> Upcoming
+        <span class="badge badge-soft ms-2">{{ upcoming|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link"
+        data-bs-toggle="pill"
+        data-bs-target="#visited"
+        type="button"
+        role="tab"
+      >
+        <i class="bi bi-check2-circle me-1"></i> Visited
+        <span class="badge badge-muted ms-2">{{ visited|length }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+      <div class="hint mb-3">
+        Upcoming = not visited. If visit date is in the past, it will move to
+        Visited automatically.
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 100px">ID</th>
+              <th>Patient</th>
+              <th style="width: 170px">Visit Date</th>
+              <th style="width: 140px">Gender</th>
+              <th style="width: 120px">Weight</th>
+              <th style="width: 240px" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if upcoming and upcoming|length > 0 %} {% for p in upcoming %}
+            <tr>
+              <td class="fw-semibold">#{{ p.patientid }}</td>
+              <td>
+                <div class="fw-semibold">{{ p.name }}</div>
+                <div class="hint text-truncate" style="max-width: 650px">
+                  <i class="bi bi-clipboard2-pulse me-1"></i>
+                  Symptoms: {{ p.symptoms if p.symptoms else "—" }}
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-muted"
+                  >{{ p.visit_date if p.visit_date else "Not set" }}</span
+                >
+              </td>
+              <td>
+                <span class="badge badge-muted"
+                  >{{ p.gender if p.gender else "—" }}</span
+                >
+              </td>
+              <td>{{ p.weight if p.weight else "—" }}</td>
+              <td class="text-end">
+                <a
+                  class="btn btn-outline-primary btn-sm"
+                  href="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+                >
+                  <i class="bi bi-pencil-square me-1"></i> Edit
+                </a>
+                <a
+                  class="btn btn-outline-danger btn-sm"
+                  href="{{ url_for('delete_patient', patient_id=p.patientid) }}"
+                  onclick="return confirm('Delete patient #{{ p.patientid }} ({{ p.name }})?');"
+                >
+                  <i class="bi bi-trash me-1"></i> Delete
+                </a>
+              </td>
+            </tr>
+            {% endfor %} {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-5">
+                <div class="fw-bold mb-1">No upcoming patients</div>
+                <div class="hint mb-3">
+                  Add a patient and optionally set a visit date.
+                </div>
+                <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
+                  <i class="bi bi-plus-circle me-1"></i> Add Patient
+                </a>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-pane fade" id="visited" role="tabpanel">
+      <div class="hint mb-3">
+        Visited = marked visited or visit date is in the past.
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 100px">ID</th>
+              <th>Patient</th>
+              <th style="width: 170px">Visit Date</th>
+              <th style="width: 140px">Gender</th>
+              <th style="width: 120px">Weight</th>
+              <th style="width: 240px" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if visited and visited|length > 0 %} {% for p in visited %}
+            <tr>
+              <td class="fw-semibold">#{{ p.patientid }}</td>
+              <td>
+                <div class="fw-semibold">{{ p.name }}</div>
+                <div class="hint text-truncate" style="max-width: 650px">
+                  <i class="bi bi-clipboard2-pulse me-1"></i>
+                  Symptoms: {{ p.symptoms if p.symptoms else "—" }}
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-soft">
+                  <i class="bi bi-check2-circle me-1"></i>{{ p.visit_date if
+                  p.visit_date else "—" }}
+                </span>
+              </td>
+              <td>
+                <span class="badge badge-muted"
+                  >{{ p.gender if p.gender else "—" }}</span
+                >
+              </td>
+              <td>{{ p.weight if p.weight else "—" }}</td>
+              <td class="text-end">
+                <a
+                  class="btn btn-outline-primary btn-sm"
+                  href="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+                >
+                  <i class="bi bi-pencil-square me-1"></i> Edit
+                </a>
+                <a
+                  class="btn btn-outline-danger btn-sm"
+                  href="{{ url_for('delete_patient', patient_id=p.patientid) }}"
+                  onclick="return confirm('Delete patient #{{ p.patientid }} ({{ p.name }})?');"
+                >
+                  <i class="bi bi-trash me-1"></i> Delete
+                </a>
+              </td>
+            </tr>
+            {% endfor %} {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-5">
+                <div class="fw-bold mb-1">No visited patients yet</div>
+                <div class="hint">
+                  Mark a patient as visited in Edit Patient.
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block title %}EHR Info · Handy EHR{% endblock %} {%
+block content %}
+<div class="page-head">
+  <div>
+    <h2 class="page-title">EHR Information</h2>
+    <p class="page-sub">What an EHR stores and why it matters.</p>
+  </div>
+</div>
+
+<div class="cardx p-4">
+  <div class="fw-bold mb-2">
+    <i class="bi bi-journal-medical me-2"></i>What is an EHR?
+  </div>
+  <p class="page-sub">
+    An Electronic Health Record (EHR) is a digital chart that supports clinical
+    workflows by storing demographics, symptoms, history, vitals, allergies,
+    labs, imaging references, and billing-related data.
+  </p>
+
+  <div class="fw-bold mt-4 mb-2">
+    <i class="bi bi-shield-lock me-2"></i>Security & Privacy
+  </div>
+  <ul>
+    <li>Authentication: doctor login with password hashing</li>
+    <li>Authorization: each doctor sees only their own patients</li>
+    <li>Extendable with audit logs</li>
+  </ul>
+
+  <div class="fw-bold mt-4 mb-2">
+    <i class="bi bi-clipboard2-pulse me-2"></i>Project Fields
+  </div>
+  <ul class="mb-0">
+    <li>Inputs: name, weight, height</li>
+    <li>Symptoms: datalist autocomplete + free typing</li>
+    <li>Checkbox: smoker, visited</li>
+    <li>Radio: gender</li>
+    <li>Date + datepicker: DOB and visit date</li>
+    <li>Textarea: other allergies / notes</li>
+    <li>Image upload: radiology attachment</li>
+  </ul>
+</div>
+{% endblock %}

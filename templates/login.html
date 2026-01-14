@@ -1,0 +1,73 @@
+{% extends "base.html" %} {% block title %}Login · Handy EHR{% endblock %} {%
+block content %}
+<div class="auth-wrap">
+  <div class="cardx p-4" style="width: 100%; max-width: 520px">
+    <div class="mb-3">
+      <h2 class="page-title">Doctor Login</h2>
+      <p class="page-sub">Access your patient queue and EHR records.</p>
+    </div>
+
+    <form
+      method="POST"
+      action="{{ url_for('login') }}"
+      class="needs-validation"
+      novalidate
+    >
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input
+            class="form-control"
+            type="email"
+            name="email"
+            placeholder="doctor@clinic.com"
+            required
+          />
+        </div>
+        <div class="invalid-feedback">Please enter a valid email.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input
+            class="form-control"
+            type="password"
+            name="password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <div class="invalid-feedback">Password is required.</div>
+      </div>
+
+      <button class="btn btn-primary w-100" type="submit">
+        <i class="bi bi-box-arrow-in-right me-1"></i> Login
+      </button>
+
+      <div class="d-flex justify-content-between mt-3">
+        <a class="text-decoration-none" href="{{ url_for('register') }}"
+          >Create account</a
+        >
+        <span class="hint">Use strong passwords.</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.querySelector(".needs-validation");
+    if (!form) return;
+    form.addEventListener("submit", (e) => {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      form.classList.add("was-validated");
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %} {% block title %}Dashboard · Handy EHR{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2 class="page-title">Dashboard</h2>
+    <p class="page-sub">
+      Welcome back, <span class="fw-semibold">Dr. {{ doctor }}</span>. Today:
+      appointments, queue, and recent activity.
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
+      <i class="bi bi-plus-circle me-1"></i> New Patient
+    </a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patients') }}">
+      <i class="bi bi-people me-1"></i> View Patients
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-4">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="hint">Total Patients</div>
+          <div class="fs-3 fw-bold">{{ stats.total_patients }}</div>
+        </div>
+        <div class="badge badge-soft px-3 py-2">
+          <i class="bi bi-people me-1"></i> Doctor-scoped
+        </div>
+      </div>
+      <div class="hint mt-2">Only your patient list is visible.</div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="hint">Recent Patients</div>
+          <div class="fs-3 fw-bold">{{ stats.recent_count }}</div>
+        </div>
+        <div class="badge badge-muted px-3 py-2">
+          <i class="bi bi-clock-history me-1"></i> Latest
+        </div>
+      </div>
+      <div class="hint mt-2">Fast access to the newest records.</div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="hint">Clinical Focus</div>
+          <div class="fs-3 fw-bold">Symptoms</div>
+        </div>
+        <div class="badge badge-soft px-3 py-2">
+          <i class="bi bi-clipboard2-pulse me-1"></i> Triage
+        </div>
+      </div>
+      <div class="hint mt-2">Queue is driven by symptoms + visit status.</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="fw-bold">
+          <i class="bi bi-calendar2-week me-2"></i>Upcoming Appointments
+        </div>
+        <span class="badge badge-muted">Today</span>
+      </div>
+      <div class="hint mb-3">Queue-style view (like real EHR systems).</div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 140px">Time</th>
+              <th>Patient</th>
+              <th style="width: 180px">Type</th>
+              <th style="width: 140px" class="text-end">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in appointments %}
+            <tr>
+              <td class="fw-semibold">{{ a.time }}</td>
+              <td>
+                <div class="fw-semibold">{{ a.patient }}</div>
+                <div class="hint">{{ a.reason }}</div>
+              </td>
+              <td><span class="badge badge-muted">{{ a.kind }}</span></td>
+              <td class="text-end">
+                {% if a.status == "Checked-in" %}
+                <span class="badge badge-soft"
+                  ><i class="bi bi-check2-circle me-1"></i>{{ a.status }}</span
+                >
+                {% elif a.status == "Waiting" %}
+                <span class="badge badge-muted"
+                  ><i class="bi bi-hourglass-split me-1"></i>{{ a.status
+                  }}</span
+                >
+                {% else %}
+                <span class="badge badge-muted">{{ a.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-outline-secondary btn-sm" disabled>
+          <i class="bi bi-plus me-1"></i> Add Appointment (next step)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="cardx p-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-bold">
+              <i class="bi bi-person-lines-fill me-2"></i>Recent Activity
+            </div>
+            <a class="text-decoration-none" href="{{ url_for('patients') }}"
+              >Open</a
+            >
+          </div>
+          <div class="hint mb-3">Latest records for quick access.</div>
+
+          {% if recent_patients and recent_patients|length > 0 %}
+          <div class="list-group list-group-flush">
+            {% for p in recent_patients %}
+            <div
+              class="list-group-item px-0 d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <div class="fw-semibold">{{ p.name }}</div>
+                <div class="hint">
+                  #{{ p.patientid }} · {{ p.gender }} · DOB: {{ p.dateofbirth }}
+                </div>
+                <div class="hint">
+                  <i class="bi bi-clipboard2-pulse me-1"></i>{{ p.symptoms if
+                  p.symptoms else "Symptoms: —" }}
+                </div>
+              </div>
+              <a
+                class="btn btn-outline-primary btn-sm"
+                href="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+              >
+                <i class="bi bi-pencil-square me-1"></i>Edit
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <div class="fw-bold mb-1">No recent patients</div>
+            <div class="hint mb-3">Add your first patient to start.</div>
+            <a
+              class="btn btn-primary btn-sm"
+              href="{{ url_for('add_patient') }}"
+            >
+              <i class="bi bi-plus-circle me-1"></i>Add Patient
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="cardx p-4">
+          <div class="fw-bold mb-2">
+            <i class="bi bi-exclamation-triangle me-2"></i>Clinical Alerts
+          </div>
+          <div class="hint mb-3">
+            Lightweight rule-based alerts (demo-friendly).
+          </div>
+
+          {% if alerts and alerts|length > 0 %}
+          <ul class="mb-0 ps-3">
+            {% for msg in alerts %}
+            <li class="mb-2">{{ msg }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="hint">No alerts detected from your latest records.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

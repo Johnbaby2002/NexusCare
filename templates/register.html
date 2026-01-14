@@ -1,0 +1,124 @@
+{% extends "base.html" %} {% block title %}Register · Handy EHR{% endblock %} {%
+block content %}
+<div class="auth-wrap">
+  <div class="cardx p-4" style="width: 100%; max-width: 620px">
+    <div class="mb-3">
+      <h2 class="page-title">Doctor Registration</h2>
+      <p class="page-sub">
+        Create a doctor account to manage your own EHR records.
+      </p>
+    </div>
+
+    <form
+      method="POST"
+      action="{{ url_for('register') }}"
+      class="needs-validation"
+      novalidate
+    >
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Full name</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input
+              class="form-control"
+              type="text"
+              name="name"
+              placeholder="Dr. John Smith"
+              required
+              minlength="2"
+            />
+          </div>
+          <div class="invalid-feedback">Name is required.</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Email</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input
+              class="form-control"
+              type="email"
+              name="email"
+              placeholder="doctor@clinic.com"
+              required
+            />
+          </div>
+          <div class="invalid-feedback">Valid email required.</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input
+              id="pw"
+              class="form-control"
+              type="password"
+              name="password"
+              required
+              minlength="8"
+              placeholder="Min 8 chars (recommended 12+)"
+            />
+          </div>
+          <div class="invalid-feedback">
+            Password must be at least 8 characters.
+          </div>
+          <div class="hint mt-2" id="pwHint">
+            Strong suggestion: 12+ chars, upper+lower, number, symbol.
+          </div>
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-primary w-100" type="submit">
+            <i class="bi bi-person-plus me-1"></i> Create account
+          </button>
+          <div class="text-center mt-3">
+            <a class="text-decoration-none" href="{{ url_for('login') }}"
+              >Already have an account? Login</a
+            >
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.querySelector(".needs-validation");
+    if (form) {
+      form.addEventListener("submit", (e) => {
+        if (!form.checkValidity()) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        form.classList.add("was-validated");
+      });
+    }
+
+    const pw = document.getElementById("pw");
+    const hint = document.getElementById("pwHint");
+    if (pw && hint) {
+      pw.addEventListener("input", () => {
+        const v = pw.value || "";
+        const score =
+          /[A-Z]/.test(v) +
+          /[a-z]/.test(v) +
+          /[0-9]/.test(v) +
+          /[^A-Za-z0-9]/.test(v) +
+          (v.length >= 12);
+
+        const labels = [
+          "Weak. Add length + variety.",
+          "Okay-ish. Add a symbol and length.",
+          "Decent. Make it longer for better security.",
+          "Strong. Don’t reuse it anywhere.",
+          "Very strong. Perfect.",
+        ];
+        hint.textContent = labels[Math.min(score, labels.length - 1)];
+      });
+    }
+  })();
+</script>
+{% endblock %}

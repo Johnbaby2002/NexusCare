@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block title %}About · Handy EHR{% endblock %} {%
+block content %}
+<div class="page-head">
+  <div>
+    <h2 class="page-title">About</h2>
+    <p class="page-sub">
+      Handmade EHR information system from a doctor’s perspective.
+    </p>
+  </div>
+</div>
+
+<div class="cardx p-4">
+  <div class="fw-bold mb-2">
+    <i class="bi bi-hospital me-2"></i>Project Summary
+  </div>
+  <p class="page-sub">
+    Handy EHR is a lightweight electronic health record system built using
+    HTML5, CSS3, Bootstrap 5, Flask (Python), and MySQL/MariaDB. It supports
+    doctor registration/login and doctor-scoped CRUD operations on patient
+    records, with symptoms-driven workflow and visit status (Upcoming vs
+    Visited).
+  </p>
+
+  <div class="fw-bold mt-4 mb-2">
+    <i class="bi bi-stack me-2"></i>Tech Stack
+  </div>
+  <ul class="mb-0">
+    <li>Frontend: HTML5, CSS3, Bootstrap 5, minimal JavaScript</li>
+    <li>Backend: Python + Flask</li>
+    <li>Database: MySQL / MariaDB</li>
+  </ul>
+</div>
+{% endblock %}
