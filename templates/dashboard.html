@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Dashboard · Handy EHR{% endblock %}
+{% extends "base.html" %} {% block title %}Dashboard · NexusCare{% endblock %}
 {% block content %}
 <div class="page-head">
   <div>
@@ -87,30 +87,32 @@
             </tr>
           </thead>
           <tbody>
-            {% for a in appointments %}
+            {% if appointments and appointments|length > 0 %} {% for a in
+            appointments %}
             <tr>
-              <td class="fw-semibold">{{ a.time }}</td>
-              <td>
-                <div class="fw-semibold">{{ a.patient }}</div>
-                <div class="hint">{{ a.reason }}</div>
+              <td class="fw-semibold">
+                {{ a.visit_time if a.visit_time else "—" }}
               </td>
-              <td><span class="badge badge-muted">{{ a.kind }}</span></td>
+              <td>
+                <div class="fw-semibold">{{ a.name }}</div>
+                <div class="hint">
+                  <i class="bi bi-clipboard2-pulse me-1"></i>
+                  {{ a.symptoms if a.symptoms else "Symptoms: —" }}
+                </div>
+              </td>
+              <td><span class="badge badge-muted">Patient Visit</span></td>
               <td class="text-end">
-                {% if a.status == "Checked-in" %}
-                <span class="badge badge-soft"
-                  ><i class="bi bi-check2-circle me-1"></i>{{ a.status }}</span
-                >
-                {% elif a.status == "Waiting" %}
-                <span class="badge badge-muted"
-                  ><i class="bi bi-hourglass-split me-1"></i>{{ a.status
-                  }}</span
-                >
-                {% else %}
-                <span class="badge badge-muted">{{ a.status }}</span>
-                {% endif %}
+                <span class="badge badge-muted">Waiting</span>
               </td>
             </tr>
-            {% endfor %}
+            {% endfor %} {% else %}
+            <tr>
+              <td colspan="4" class="text-center py-5">
+                <div class="fw-bold">No upcoming appointments</div>
+                <div class="hint">No patients scheduled for today.</div>
+              </td>
+            </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>

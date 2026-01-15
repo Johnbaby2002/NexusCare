@@ -176,48 +176,75 @@ def logout():
 # -------------------------------------
 # Dashboard
 # -------------------------------------
+from datetime import date
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    # --- DB: totals, recent patients, and REAL appointments for today ---
     conn = get_db()
     cur = conn.cursor(dictionary=True)
 
-    cur.execute("SELECT COUNT(*) AS cnt FROM patients WHERE doctorid=%s", (session["doctor_id"],))
-    total_patients = (cur.fetchone() or {}).get("cnt", 0)
-
+    # Total patients for this doctor
     cur.execute(
-        "SELECT patientid, name, gender, dateofbirth, symptoms FROM patients WHERE doctorid=%s ORDER BY patientid DESC LIMIT 5",
+        "SELECT COUNT(*) AS cnt FROM patients WHERE doctorid = %s",
+        (session["doctor_id"],)
+    )
+    row = cur.fetchone()
+    total_patients = (row["cnt"] if row and "cnt" in row else 0)
+
+    # Recent patients (latest 5)
+    cur.execute(
+        """
+        SELECT patientid, name, gender, dateofbirth, symptoms
+        FROM patients
+        WHERE doctorid = %s
+        ORDER BY patientid DESC
+        LIMIT 5
+        """,
         (session["doctor_id"],)
     )
     recent_patients = cur.fetchall() or []
 
+    # REAL upcoming appointments for TODAY (only not visited)
+    today = date.today().isoformat()
+    cur.execute(
+        """
+        SELECT patientid, name, symptoms, visit_time
+        FROM patients
+        WHERE doctorid = %s
+          AND visit_date = %s
+          AND visited = 0
+        ORDER BY visit_time IS NULL, visit_time ASC, patientid ASC
+        """,
+        (session["doctor_id"], today)
+    )
+    appointments = cur.fetchall() or []
+
     cur.close()
     conn.close()
 
-    appointments = [
-        {"time": "09:00", "patient": "Walk-in / New", "kind": "Consultation", "reason": "Initial assessment", "status": "Waiting"},
-        {"time": "09:30", "patient": "Follow-up", "kind": "Follow-up", "reason": "Medication review", "status": "Checked-in"},
-        {"time": "10:15", "patient": "Lab Review", "kind": "Results", "reason": "CBC + iron panel", "status": "Waiting"},
-        {"time": "11:00", "patient": "Imaging", "kind": "Radiology", "reason": "Abdominal pain – image review", "status": "Scheduled"},
-    ]
-
+    # Basic alerts (optional: keep simple)
     alerts = []
-    # simple example alert logic (optional)
     for p in recent_patients:
         s = (p.get("symptoms") or "").lower()
-        if "chest pain" in s or "shortness of breath" in s:
-            alerts.append(f"High-priority symptom pattern detected for {p.get('name')}: chest pain / shortness of breath.")
+        if "chest" in s or "shortness" in s or "dyspnea" in s:
+            alerts.append(f"Possible urgent symptom in recent record: {p.get('name')}")
 
-    stats = {"total_patients": total_patients, "recent_count": len(recent_patients)}
+    stats = {
+        "total_patients": total_patients,
+        "recent_count": len(recent_patients),
+    }
 
     return render_template(
         "dashboard.html",
         doctor=session.get("doctor_name"),
         stats=stats,
-        appointments=appointments,
         recent_patients=recent_patients,
+        appointments=appointments,
         alerts=alerts
     )
+
 
 
 # -------------------------------------
@@ -288,6 +315,7 @@ def add_patient():
         height = request.form.get("height")
         visit_date = request.form.get("visit_date")
         smoker = 1 if request.form.get("smoker") else 0
+        visit_time = (request.form.get("visit_time") or "").strip()
 
         symptoms = (request.form.get("symptoms") or "").strip()
 
@@ -377,6 +405,7 @@ def edit_patient(patient_id):
         height = request.form.get("height")
         visit_date = request.form.get("visit_date")
         smoker = 1 if request.form.get("smoker") else 0
+        visit_time = (request.form.get("visit_time") or "").strip()
 
         symptoms = (request.form.get("symptoms") or "").strip()
         visited_flag = 1 if request.form.get("visited") else 0
@@ -417,6 +446,10 @@ def edit_patient(patient_id):
             set_parts.append("height=%s"); vals.append(height)
         if "visit_date" in patient_cols:
             set_parts.append("visit_date=%s"); vals.append(visit_date)
+        if "visit_time" in patient_cols:
+            set_parts.append("visit_time=%s")
+            vals.append(visit_time if visit_time else None)
+
         if "smoker" in patient_cols:
             set_parts.append("smoker=%s"); vals.append(smoker)
         if "symptoms" in patient_cols:
