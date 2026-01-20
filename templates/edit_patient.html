@@ -44,29 +44,48 @@
             />
           </div>
 
-          <div class="col-12 col-md-3">
-            <label class="form-label">Gender (radio)</label>
-            <div class="d-flex gap-3 mt-2">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="gender"
-                id="gM" value="Male" {% if patient.gender == "Male" %}checked{%
-                endif %} required>
-                <label class="form-check-label" for="gM">Male</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="gender"
-                id="gF" value="Female" {% if patient.gender == "Female"
-                %}checked{% endif %}>
-                <label class="form-check-label" for="gF">Female</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="gender"
-                id="gO" value="Other" {% if patient.gender == "Other"
-                %}checked{% endif %}>
-                <label class="form-check-label" for="gO">Other</label>
-              </div>
-            </div>
-          </div>
+         <div class="col-12 col-md-3">
+  <label class="form-label">Gender (radio)</label>
+  <div class="d-flex gap-3 mt-2">
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="gender"
+        id="gM"
+        value="Male"
+        {% if patient.gender == "Male" %}checked{% endif %}
+        required
+      />
+      <label class="form-check-label" for="gM">Male</label>
+    </div>
+
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="gender"
+        id="gF"
+        value="Female"
+        {% if patient.gender == "Female" %}checked{% endif %}
+      />
+      <label class="form-check-label" for="gF">Female</label>
+    </div>
+
+    <div class="form-check">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="gender"
+        id="gO"
+        value="Other"
+        {% if patient.gender == "Other" %}checked{% endif %}
+      />
+      <label class="form-check-label" for="gO">Other</label>
+    </div>
+  </div>
+</div>
+
 
           <div class="col-12 col-md-3">
             <label class="form-label">Date of birth (datepicker)</label>
@@ -126,27 +145,34 @@
           <div class="col-12 col-md-4">
   <label class="form-label">Visit time</label>
   <select class="form-select" name="visit_time">
-    <option value="" {% if not patient.visit_time %}selected{% endif %}>Not set</option>
+    <option value="" {{ "selected" if not patient.visit_time else "" }}>Not set</option>
 
     {% for t in ["08:00","08:15","08:30","08:45","09:00","09:15","09:30","09:45",
                  "10:00","10:15","10:30","10:45","11:00","11:15","11:30","11:45",
                  "12:00","12:15","12:30","12:45","13:00","13:15","13:30","13:45",
                  "14:00","14:15","14:30","14:45","15:00","15:15","15:30","15:45",
                  "16:00","16:15","16:30","16:45","17:00"] %}
-      <option value="{{ t }}" {% if patient.visit_time == t %}selected{% endif %}>{{ t }}</option>
+      <option value="{{ t }}" {{ "selected" if patient.visit_time == t else "" }}>{{ t }}</option>
     {% endfor %}
   </select>
-  </div>
+</div>
+
 
           <div class="col-12 col-md-4">
-            <label class="form-label">Smoker (checkbox)</label>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="checkbox" name="smoker"
-              id="smoker" value="1" {% if patient.smoker == 1 %}checked{% endif
-              %}>
-              <label class="form-check-label" for="smoker">Yes</label>
-            </div>
-          </div>
+  <label class="form-label">Smoker (checkbox)</label>
+  <div class="form-check mt-2">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      name="smoker"
+      id="smoker"
+      value="1"
+      {{ "checked" if patient.smoker == 1 else "" }}
+    />
+    <label class="form-check-label" for="smoker">Yes</label>
+  </div>
+</div>
+
 
           <div class="col-12">
             <div class="fw-bold">
@@ -187,16 +213,44 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <label class="form-label">Visit status</label>
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="checkbox" name="visited"
-              id="visited" {% if patient.visited == 1 %}checked{% endif %}>
-              <label class="form-check-label" for="visited"
-                >Visited (completed)</label
-              >
+  <label class="form-label">Visit status</label>
+  <div class="form-check mt-2">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      name="visited"
+      id="visited"
+      {{ "checked" if patient.visited == 1 else "" }}
+    />
+    <label class="form-check-label" for="visited">Visited (completed)</label>
+  </div>
+  <div class="hint mt-2">Checked = moved to Visited tab.</div>
+</div>
+
+
+          <!-- ✅ NEW: Diagnosis section -->
+          <div class="col-12">
+            <div class="fw-bold">
+              <i class="bi bi-clipboard-check me-2"></i>Diagnosis
             </div>
-            <div class="hint mt-2">Checked = moved to Visited tab.</div>
+            <hr class="mt-2 mb-0" />
           </div>
+
+          <div class="col-12">
+            <label class="form-label">Diagnosis (textarea)</label>
+            <textarea
+              class="form-control"
+              name="diagnosis"
+              rows="3"
+              placeholder="e.g., Acute pharyngitis / suspected viral infection"
+            >
+{{ patient.diagnosis if patient.diagnosis else "" }}</textarea
+            >
+            <div class="hint mt-2">
+              Useful for visited patients and follow-ups (revisits).
+            </div>
+          </div>
+          <!-- ✅ END Diagnosis -->
 
           <div class="col-12">
             <div class="fw-bold">
@@ -324,6 +378,15 @@
       <hr />
 
       <div class="fw-semibold mb-2">
+        <i class="bi bi-clipboard-check me-2"></i>Diagnosis
+      </div>
+      <div class="hint">
+        {{ patient.diagnosis if patient.diagnosis else "—" }}
+      </div>
+
+      <hr />
+
+      <div class="fw-semibold mb-2">
         <i class="bi bi-droplet-half me-2"></i>Allergies
       </div>
       <div class="hint">
@@ -341,6 +404,65 @@
     </div>
   </div>
 </div>
+
+<!-- SOAP Notes -->
+<div class="col-12">
+  <div class="fw-bold">
+    <i class="bi bi-journal-medical me-2"></i>SOAP Notes
+  </div>
+  <hr class="mt-2 mb-0" />
+</div>
+
+<div class="col-12">
+  <label class="form-label">S — Subjective</label>
+  <textarea
+    class="form-control"
+    name="soap_subjective"
+    rows="3"
+    placeholder="Patient-reported symptoms, history, complaints..."
+  >
+{{ patient.soap_subjective if patient.soap_subjective else "" }}</textarea
+  >
+</div>
+
+<div class="col-12">
+  <label class="form-label">O — Objective</label>
+  <textarea
+    class="form-control"
+    name="soap_objective"
+    rows="3"
+    placeholder="Vitals, exam findings, measurements, labs..."
+  >
+{{ patient.soap_objective if patient.soap_objective else "" }}</textarea
+  >
+</div>
+
+<div class="col-12">
+  <label class="form-label">A — Assessment</label>
+  <textarea
+    class="form-control"
+    name="soap_assessment"
+    rows="3"
+    placeholder="Clinical impression / differential / diagnosis reasoning..."
+  >
+{{ patient.soap_assessment if patient.soap_assessment else "" }}</textarea
+  >
+</div>
+
+<div class="col-12">
+  <label class="form-label">P — Plan</label>
+  <textarea
+    class="form-control"
+    name="soap_plan"
+    rows="3"
+    placeholder="Treatment, meds, follow-up plan, referrals..."
+  >
+{{ patient.soap_plan if patient.soap_plan else "" }}</textarea
+  >
+  <div class="hint mt-2">This is the part clinics print and act on.</div>
+</div>
+<!-- END SOAP Notes -->
+
 {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>

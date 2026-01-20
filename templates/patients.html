@@ -1,5 +1,6 @@
 {% extends "base.html" %} {% block title %}Patients · NexusCare{% endblock %} {%
 block content %}
+
 <div class="page-head">
   <div>
     <h2 class="page-title">Patients</h2>
@@ -7,35 +8,24 @@ block content %}
       Queue + history. Symptoms are displayed for fast triage.
     </p>
   </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
-      <i class="bi bi-plus-circle me-1"></i> Add Patient
-    </a>
-  </div>
+  <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
+    <i class="bi bi-plus-circle me-1"></i> Add Patient
+  </a>
 </div>
 
 <div class="cardx p-4">
   <ul class="nav nav-pills mb-3" role="tablist">
-    <li class="nav-item" role="presentation">
+    <li class="nav-item">
       <button
         class="nav-link active"
         data-bs-toggle="pill"
         data-bs-target="#upcoming"
-        type="button"
-        role="tab"
       >
         <i class="bi bi-calendar2-week me-1"></i> Upcoming
-        <span class="badge badge-soft ms-2">{{ upcoming|length }}</span>
       </button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button
-        class="nav-link"
-        data-bs-toggle="pill"
-        data-bs-target="#visited"
-        type="button"
-        role="tab"
-      >
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#visited">
         <i class="bi bi-check2-circle me-1"></i> Visited
         <span class="badge badge-muted ms-2">{{ visited|length }}</span>
       </button>
@@ -43,7 +33,8 @@ block content %}
   </ul>
 
   <div class="tab-content">
-    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+    <!-- UPCOMING -->
+    <div class="tab-pane fade show active" id="upcoming">
       <div class="hint mb-3">
         Upcoming = not visited. If visit date is in the past, it will move to
         Visited automatically.
@@ -53,36 +44,67 @@ block content %}
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th style="width: 100px">ID</th>
+              <th style="width: 90px">ID</th>
               <th>Patient</th>
-              <th style="width: 170px">Visit Date</th>
-              <th style="width: 140px">Gender</th>
-              <th style="width: 120px">Weight</th>
-              <th style="width: 240px" class="text-end">Actions</th>
+              <th style="width: 160px">Visit Date</th>
+              <th style="width: 120px">Gender</th>
+              <th style="width: 100px">Age</th>
+              <th style="width: 220px" class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% if upcoming and upcoming|length > 0 %} {% for p in upcoming %}
+            {% if upcoming %} {% for p in upcoming %} {% set age = (current_year
+            - p.dateofbirth.year) if p.dateofbirth else "—" %}
+
             <tr>
               <td class="fw-semibold">#{{ p.patientid }}</td>
               <td>
-                <div class="fw-semibold">{{ p.name }}</div>
-                <div class="hint text-truncate" style="max-width: 650px">
-                  <i class="bi bi-clipboard2-pulse me-1"></i>
-                  Symptoms: {{ p.symptoms if p.symptoms else "—" }}
-                </div>
+                <a
+  href="#"
+  class="fw-semibold text-decoration-none js-patient-details"
+  data-bs-toggle="modal"
+  data-bs-target="#patientDetailsModal"
+  data-patient-id="{{ p.patientid }}"
+  data-patient-name="{{ p.name|e }}"
+  data-patient-gender="{{ p.gender if p.gender else '' }}"
+  data-patient-dob="{{ p.dateofbirth if p.dateofbirth else '' }}"
+  data-patient-smoker="{{ 'Yes' if p.smoker in [1, '1', True] else 'No' if p.smoker in [0, '0', False] else '' }}"
+  data-patient-weight="{{ p.weight if p.weight is not none else '' }}"
+  data-patient-height="{{ p.height if p.height is not none else '' }}"
+  data-patient-allergies="{{ p.allergies|e if p.allergies else '' }}"
+  data-patient-visit-date="{{ p.visit_date if p.visit_date else '' }}"
+  data-patient-visit-time="{{ p.visit_time if p.visit_time else '' }}"
+  data-patient-symptoms="{{ p.symptoms|e if p.symptoms else '' }}"
+  data-patient-edit-url="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+>
+  {{ p.name }}
+</a>
+
+
+{% if p.is_revisit == 1 %}
+  <div class="mt-1">
+    <span class="badge badge-soft">
+      <i class="bi bi-arrow-repeat me-1"></i> Revisit
+    </span>
+    {% if p.revisit_from %}
+      <span class="hint ms-1">from #{{ p.revisit_from }}</span>
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="hint">
+  <i class="bi bi-clipboard2-pulse me-1"></i>
+  Symptoms: {{ p.symptoms if p.symptoms else "—" }}
+</div>
+
               </td>
               <td>
-                <span class="badge badge-muted"
-                  >{{ p.visit_date if p.visit_date else "Not set" }}</span
-                >
+                <span class="badge badge-muted">
+                  {{ p.visit_date if p.visit_date else "Not set" }}
+                </span>
               </td>
-              <td>
-                <span class="badge badge-muted"
-                  >{{ p.gender if p.gender else "—" }}</span
-                >
-              </td>
-              <td>{{ p.weight if p.weight else "—" }}</td>
+              <td><span class="badge badge-muted">{{ p.gender }}</span></td>
+              <td class="fw-semibold">{{ age }}</td>
               <td class="text-end">
                 <a
                   class="btn btn-outline-primary btn-sm"
@@ -93,7 +115,7 @@ block content %}
                 <a
                   class="btn btn-outline-danger btn-sm"
                   href="{{ url_for('delete_patient', patient_id=p.patientid) }}"
-                  onclick="return confirm('Delete patient #{{ p.patientid }} ({{ p.name }})?');"
+                  onclick="return confirm('Delete {{ p.name }}?');"
                 >
                   <i class="bi bi-trash me-1"></i> Delete
                 </a>
@@ -102,13 +124,7 @@ block content %}
             {% endfor %} {% else %}
             <tr>
               <td colspan="6" class="text-center py-5">
-                <div class="fw-bold mb-1">No upcoming patients</div>
-                <div class="hint mb-3">
-                  Add a patient and optionally set a visit date.
-                </div>
-                <a class="btn btn-primary" href="{{ url_for('add_patient') }}">
-                  <i class="bi bi-plus-circle me-1"></i> Add Patient
-                </a>
+                <div class="fw-bold">No upcoming patients</div>
               </td>
             </tr>
             {% endif %}
@@ -117,69 +133,84 @@ block content %}
       </div>
     </div>
 
-    <div class="tab-pane fade" id="visited" role="tabpanel">
-      <div class="hint mb-3">
-        Visited = marked visited or visit date is in the past.
-      </div>
+    <!-- VISITED -->
+    <div class="tab-pane fade" id="visited">
+      <div class="hint mb-3">Completed visits.</div>
 
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th style="width: 100px">ID</th>
+              <th style="width: 90px">ID</th>
               <th>Patient</th>
-              <th style="width: 170px">Visit Date</th>
-              <th style="width: 140px">Gender</th>
-              <th style="width: 120px">Weight</th>
-              <th style="width: 240px" class="text-end">Actions</th>
+              <th style="width: 160px">Visit Date</th>
+              <th style="width: 120px">Gender</th>
+              <th style="width: 100px">Age</th>
+              <th style="width: 260px" class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% if visited and visited|length > 0 %} {% for p in visited %}
+            {% if visited %} {% for p in visited %} {% set age = (current_year -
+            p.dateofbirth.year) if p.dateofbirth else "—" %}
+
             <tr>
               <td class="fw-semibold">#{{ p.patientid }}</td>
               <td>
-                <div class="fw-semibold">{{ p.name }}</div>
-                <div class="hint text-truncate" style="max-width: 650px">
-                  <i class="bi bi-clipboard2-pulse me-1"></i>
-                  Symptoms: {{ p.symptoms if p.symptoms else "—" }}
+               <a
+  href="#"
+  class="fw-semibold text-decoration-none js-patient-details"
+  data-bs-toggle="modal"
+  data-bs-target="#patientDetailsModal"
+  data-patient-id="{{ p.patientid }}"
+  data-patient-name="{{ p.name|e }}"
+  data-patient-gender="{{ p.gender if p.gender else '' }}"
+  data-patient-dob="{{ p.dateofbirth if p.dateofbirth else '' }}"
+  data-patient-smoker="{{ 'Yes' if p.smoker in [1, '1', True] else 'No' if p.smoker in [0, '0', False] else '' }}"
+  data-patient-weight="{{ p.weight if p.weight is not none else '' }}"
+  data-patient-height="{{ p.height if p.height is not none else '' }}"
+  data-patient-allergies="{{ p.allergies|e if p.allergies else '' }}"
+  data-patient-visit-date="{{ p.visit_date if p.visit_date else '' }}"
+  data-patient-visit-time="{{ p.visit_time if p.visit_time else '' }}"
+  data-patient-symptoms="{{ p.symptoms|e if p.symptoms else '' }}"
+  data-patient-edit-url="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+>
+  {{ p.name }}
+</a>
+
+                <div class="hint">
+                  <i class="bi bi-clipboard2-check me-1"></i>
+                  Diagnosis: {{ p.diagnosis if p.diagnosis else "—" }}
                 </div>
               </td>
               <td>
-                <span class="badge badge-soft">
-                  <i class="bi bi-check2-circle me-1"></i>{{ p.visit_date if
-                  p.visit_date else "—" }}
-                </span>
+                <span class="badge badge-soft">{{ p.visit_date }}</span>
               </td>
-              <td>
-                <span class="badge badge-muted"
-                  >{{ p.gender if p.gender else "—" }}</span
-                >
-              </td>
-              <td>{{ p.weight if p.weight else "—" }}</td>
+              <td><span class="badge badge-muted">{{ p.gender }}</span></td>
+              <td class="fw-semibold">{{ age }}</td>
               <td class="text-end">
+               <button
+  type="button"
+  class="btn btn-outline-success btn-sm js-open-revisit"
+  data-bs-toggle="modal"
+  data-bs-target="#revisitModal"
+  data-patient-id="{{ p.patientid }}"
+  data-patient-name="{{ p.name|e }}"
+>
+  <i class="bi bi-arrow-repeat me-1"></i> Revisit
+</button>
+
                 <a
                   class="btn btn-outline-primary btn-sm"
                   href="{{ url_for('edit_patient', patient_id=p.patientid) }}"
                 >
                   <i class="bi bi-pencil-square me-1"></i> Edit
                 </a>
-                <a
-                  class="btn btn-outline-danger btn-sm"
-                  href="{{ url_for('delete_patient', patient_id=p.patientid) }}"
-                  onclick="return confirm('Delete patient #{{ p.patientid }} ({{ p.name }})?');"
-                >
-                  <i class="bi bi-trash me-1"></i> Delete
-                </a>
               </td>
             </tr>
             {% endfor %} {% else %}
             <tr>
               <td colspan="6" class="text-center py-5">
-                <div class="fw-bold mb-1">No visited patients yet</div>
-                <div class="hint">
-                  Mark a patient as visited in Edit Patient.
-                </div>
+                <div class="fw-bold">No visited patients</div>
               </td>
             </tr>
             {% endif %}
@@ -189,4 +220,59 @@ block content %}
     </div>
   </div>
 </div>
+
+<!-- Revisit Modal -->
+<div class="modal fade" id="revisitModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-arrow-repeat me-2"></i>Schedule Revisit
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-2">
+          Patient: <span class="fw-semibold" id="revisitPatientName">—</span>
+        </div>
+        <div class="hint">Choose when to schedule the revisit:</div>
+      </div>
+
+      <div class="modal-footer">
+        <form id="revisitForm" method="POST" action="">
+          <input type="hidden" name="when" id="revisitWhen" value="1w" />
+          <button type="submit" class="btn btn-outline-secondary" onclick="document.getElementById('revisitWhen').value='1w'">
+            1 week
+          </button>
+          <button type="submit" class="btn btn-outline-secondary" onclick="document.getElementById('revisitWhen').value='2w'">
+            2 weeks
+          </button>
+          <button type="submit" class="btn btn-primary" onclick="document.getElementById('revisitWhen').value='1m'">
+            1 month
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".js-open-revisit");
+    if (!btn) return;
+
+    const pid = btn.getAttribute("data-patient-id");
+    const pname = btn.getAttribute("data-patient-name");
+
+    document.getElementById("revisitPatientName").textContent = pname;
+
+    // Set the form action to the correct patient revisit endpoint
+    document.getElementById("revisitForm").action = "/patient/" + pid + "/revisit";
+  });
+</script>
+
+
 {% endblock %}

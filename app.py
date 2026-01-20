@@ -181,7 +181,8 @@ from datetime import date
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    # --- DB: totals, recent patients, and REAL appointments for today ---
+    from datetime import date, timedelta
+
     conn = get_db()
     cur = conn.cursor(dictionary=True)
 
@@ -206,25 +207,149 @@ def dashboard():
     )
     recent_patients = cur.fetchall() or []
 
-    # REAL upcoming appointments for TODAY (only not visited)
-    today = date.today().isoformat()
+    # Date buckets
+    today_dt = date.today()
+    yesterday_dt = today_dt - timedelta(days=1)
+    tomorrow_dt = today_dt + timedelta(days=1)
+
+    # 7-day window: today -> today+7 (inclusive)
+    week_start_dt = today_dt
+    week_end_dt = today_dt + timedelta(days=7)
+
+    today = today_dt.isoformat()
+    yesterday = yesterday_dt.isoformat()
+    tomorrow = tomorrow_dt.isoformat()
+    week_start = week_start_dt.isoformat()
+    week_end = week_end_dt.isoformat()
+
+       # --- Appointments by buckets ---
+
+    # YESTERDAY (visited + not visited)
     cur.execute(
         """
-        SELECT patientid, name, symptoms, visit_time
+        SELECT
+            patientid,
+            name,
+            gender,
+            dateofbirth,
+            smoker,
+            weight,
+            height,
+            allergies,
+            symptoms,
+            visit_date,
+            visit_time,
+            visited
         FROM patients
         WHERE doctorid = %s
-          AND visit_date = %s
+          AND visit_date IS NOT NULL
+          AND DATE(visit_date) = %s
+        ORDER BY
+          visited ASC,
+          visit_time IS NULL,
+          visit_time ASC,
+          patientid ASC
+        """,
+        (session["doctor_id"], yesterday)
+    )
+    appt_yesterday = cur.fetchall() or []
+
+    # TODAY (upcoming only)
+    cur.execute(
+        """
+        SELECT
+            patientid,
+            name,
+            gender,
+            dateofbirth,
+            smoker,
+            weight,
+            height,
+            allergies,
+            symptoms,
+            visit_date,
+            visit_time,
+            visited
+        FROM patients
+        WHERE doctorid = %s
+          AND visit_date IS NOT NULL
+          AND DATE(visit_date) = %s
           AND visited = 0
-        ORDER BY visit_time IS NULL, visit_time ASC, patientid ASC
+        ORDER BY
+          visit_time IS NULL,
+          visit_time ASC,
+          patientid ASC
         """,
         (session["doctor_id"], today)
     )
-    appointments = cur.fetchall() or []
+    appt_today = cur.fetchall() or []
+
+    # TOMORROW (upcoming only)
+    cur.execute(
+        """
+        SELECT
+            patientid,
+            name,
+            gender,
+            dateofbirth,
+            smoker,
+            weight,
+            height,
+            allergies,
+            symptoms,
+            visit_date,
+            visit_time,
+            visited
+        FROM patients
+        WHERE doctorid = %s
+          AND visit_date IS NOT NULL
+          AND DATE(visit_date) = %s
+          AND visited = 0
+        ORDER BY
+          visit_time IS NULL,
+          visit_time ASC,
+          patientid ASC
+        """,
+        (session["doctor_id"], tomorrow)
+    )
+    appt_tomorrow = cur.fetchall() or []
+
+    # NEXT 7 DAYS (upcoming only)
+    cur.execute(
+        """
+        SELECT
+            patientid,
+            name,
+            gender,
+            dateofbirth,
+            smoker,
+            weight,
+            height,
+            allergies,
+            symptoms,
+            visit_date,
+            visit_time,
+            visited
+        FROM patients
+        WHERE doctorid = %s
+          AND visit_date IS NOT NULL
+          AND DATE(visit_date) BETWEEN %s AND %s
+          AND visited = 0
+        ORDER BY
+          DATE(visit_date) ASC,
+          visit_time IS NULL,
+          visit_time ASC,
+          patientid ASC
+        """,
+        (session["doctor_id"], week_start, week_end)
+    )
+    appt_7day = cur.fetchall() or []
+
 
     cur.close()
     conn.close()
 
-    # Basic alerts (optional: keep simple)
+    # Basic alerts
     alerts = []
     for p in recent_patients:
         s = (p.get("symptoms") or "").lower()
@@ -241,11 +366,14 @@ def dashboard():
         doctor=session.get("doctor_name"),
         stats=stats,
         recent_patients=recent_patients,
-        appointments=appointments,
+        appointments_today=appt_today,
+        appointments_yesterday=appt_yesterday,
+        appointments_tomorrow=appt_tomorrow,
+        appointments_7day=appt_7day,
+        week_start=week_start_dt.strftime("%d.%m"),
+        week_end=week_end_dt.strftime("%d.%m"),
         alerts=alerts
     )
-
-
 
 # -------------------------------------
 # Patients helpers
@@ -260,42 +388,77 @@ def allergies_options_list():
 @app.route("/patients")
 @login_required
 def patients():
+    import datetime as dt
+
     conn = get_db()
     cur = conn.cursor(dictionary=True)
 
+    # If you have auto-move logic based on visit_date in the past,
+    # keep it EXACTLY like you had it. This is a safe example:
+    today = dt.date.today()
+
+    # OPTIONAL: if your app already marks past appointments as visited, keep it.
+    # If you don't have this in your current function, remove this block.
+    try:
+        cur.execute(
+            """
+            UPDATE patients
+            SET visited = 1
+            WHERE doctorid = %s
+              AND visited = 0
+              AND visit_date IS NOT NULL
+              AND DATE(visit_date) < %s
+            """,
+            (session["doctor_id"], today.isoformat())
+        )
+        conn.commit()
+    except Exception:
+        # If your DB doesn't like DATE(visit_date) because visit_date isn't a date,
+        # or if you didn't want auto-update, comment out the UPDATE block above.
+        pass
+
+    # Upcoming
     cur.execute(
-        "SELECT * FROM patients WHERE doctorid=%s ORDER BY patientid DESC",
+        """
+        SELECT *
+        FROM patients
+        WHERE doctorid = %s AND visited = 0
+        ORDER BY
+          (visit_date IS NULL) ASC,
+          DATE(visit_date) ASC,
+          (visit_time IS NULL) ASC,
+          visit_time ASC,
+          patientid DESC
+        """,
         (session["doctor_id"],)
     )
-    all_patients = cur.fetchall() or []
+    upcoming = cur.fetchall() or []
+
+    # Visited
+    cur.execute(
+        """
+        SELECT *
+        FROM patients
+        WHERE doctorid = %s AND visited = 1
+        ORDER BY
+          DATE(visit_date) DESC,
+          (visit_time IS NULL) ASC,
+          visit_time ASC,
+          patientid DESC
+        """,
+        (session["doctor_id"],)
+    )
+    visited = cur.fetchall() or []
 
     cur.close()
     conn.close()
 
-    today = date.today()
-    upcoming = []
-    visited = []
-
-    for p in all_patients:
-        vd = p.get("visit_date")
-        is_visited = int(p.get("visited") or 0)
-
-        vd_date = None
-        if vd:
-            try:
-                vd_date = vd if hasattr(vd, "year") else date.fromisoformat(str(vd)[:10])
-            except Exception:
-                vd_date = None
-
-        if is_visited == 1:
-            visited.append(p)
-        else:
-            if vd_date and vd_date < today:
-                visited.append(p)
-            else:
-                upcoming.append(p)
-
-    return render_template("patients.html", upcoming=upcoming, visited=visited)
+    return render_template(
+        "patients.html",
+        upcoming=upcoming,
+        visited=visited,
+        current_year=dt.date.today().year
+    )
 
 
 # -------------------------------------
@@ -318,6 +481,13 @@ def add_patient():
         visit_time = (request.form.get("visit_time") or "").strip()
 
         symptoms = (request.form.get("symptoms") or "").strip()
+        diagnosis = (request.form.get("diagnosis") or "").strip()
+
+        # ✅ SOAP notes
+        soap_subjective = (request.form.get("soap_subjective") or "").strip()
+        soap_objective = (request.form.get("soap_objective") or "").strip()
+        soap_assessment = (request.form.get("soap_assessment") or "").strip()
+        soap_plan = (request.form.get("soap_plan") or "").strip()
 
         allergies_list = request.form.getlist("allergies")
         extra_allergies = (request.form.get("extra_allergies") or "").strip()
@@ -351,12 +521,28 @@ def add_patient():
             cols.append("height"); vals.append(height)
         if "visit_date" in patient_cols:
             cols.append("visit_date"); vals.append(visit_date)
+        if "visit_time" in patient_cols:
+            cols.append("visit_time"); vals.append(visit_time if visit_time else None)
+
         if "smoker" in patient_cols:
             cols.append("smoker"); vals.append(smoker)
         if "symptoms" in patient_cols:
             cols.append("symptoms"); vals.append(symptoms)
         if "visited" in patient_cols:
             cols.append("visited"); vals.append(0)
+
+        if "diagnosis" in patient_cols:
+            cols.append("diagnosis"); vals.append(diagnosis)
+
+        # ✅ SOAP notes only if the columns exist
+        if "soap_subjective" in patient_cols:
+            cols.append("soap_subjective"); vals.append(soap_subjective)
+        if "soap_objective" in patient_cols:
+            cols.append("soap_objective"); vals.append(soap_objective)
+        if "soap_assessment" in patient_cols:
+            cols.append("soap_assessment"); vals.append(soap_assessment)
+        if "soap_plan" in patient_cols:
+            cols.append("soap_plan"); vals.append(soap_plan)
 
         if radiology_filename and "radiology_image" in patient_cols:
             cols.append("radiology_image"); vals.append(radiology_filename)
@@ -375,7 +561,6 @@ def add_patient():
         return redirect(url_for("patients"))
 
     return render_template("add_patient.html", allergies_options=allergies_options)
-
 
 # -------------------------------------
 # Edit patient
@@ -409,6 +594,14 @@ def edit_patient(patient_id):
 
         symptoms = (request.form.get("symptoms") or "").strip()
         visited_flag = 1 if request.form.get("visited") else 0
+
+        diagnosis = (request.form.get("diagnosis") or "").strip()
+
+        # ✅ SOAP notes
+        soap_subjective = (request.form.get("soap_subjective") or "").strip()
+        soap_objective = (request.form.get("soap_objective") or "").strip()
+        soap_assessment = (request.form.get("soap_assessment") or "").strip()
+        soap_plan = (request.form.get("soap_plan") or "").strip()
 
         allergies_list = request.form.getlist("allergies")
         extra_allergies = (request.form.get("extra_allergies") or "").strip()
@@ -447,8 +640,7 @@ def edit_patient(patient_id):
         if "visit_date" in patient_cols:
             set_parts.append("visit_date=%s"); vals.append(visit_date)
         if "visit_time" in patient_cols:
-            set_parts.append("visit_time=%s")
-            vals.append(visit_time if visit_time else None)
+            set_parts.append("visit_time=%s"); vals.append(visit_time if visit_time else None)
 
         if "smoker" in patient_cols:
             set_parts.append("smoker=%s"); vals.append(smoker)
@@ -456,6 +648,19 @@ def edit_patient(patient_id):
             set_parts.append("symptoms=%s"); vals.append(symptoms)
         if "visited" in patient_cols:
             set_parts.append("visited=%s"); vals.append(visited_flag)
+
+        if "diagnosis" in patient_cols:
+            set_parts.append("diagnosis=%s"); vals.append(diagnosis)
+
+        # ✅ SOAP notes only if the columns exist
+        if "soap_subjective" in patient_cols:
+            set_parts.append("soap_subjective=%s"); vals.append(soap_subjective)
+        if "soap_objective" in patient_cols:
+            set_parts.append("soap_objective=%s"); vals.append(soap_objective)
+        if "soap_assessment" in patient_cols:
+            set_parts.append("soap_assessment=%s"); vals.append(soap_assessment)
+        if "soap_plan" in patient_cols:
+            set_parts.append("soap_plan=%s"); vals.append(soap_plan)
 
         if radiology_filename and "radiology_image" in patient_cols:
             set_parts.append("radiology_image=%s"); vals.append(radiology_filename)
@@ -477,7 +682,6 @@ def edit_patient(patient_id):
     conn.close()
     return render_template("edit_patient.html", patient=patient, allergies_options=allergies_options)
 
-
 # -------------------------------------
 # Delete patient
 # -------------------------------------
@@ -492,6 +696,97 @@ def delete_patient(patient_id):
     conn.close()
 
     flash("Patient deleted.", "info")
+    return redirect(url_for("patients"))
+
+from datetime import date
+
+@app.route("/patient/<int:patient_id>/revisit", methods=["POST"])
+@login_required
+def revisit_patient(patient_id):
+    import datetime as dt
+
+    when = (request.form.get("when") or "").strip()
+    days_map = {"1w": 7, "2w": 14, "1m": 30}
+
+    if when not in days_map:
+        flash("Invalid revisit option.", "danger")
+        return redirect(url_for("patients"))
+
+    new_date = (dt.date.today() + dt.timedelta(days=days_map[when])).isoformat()
+
+    patient_cols = get_table_columns("patients")
+
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+
+    # Fetch the original (visited) record
+    cur.execute(
+        "SELECT * FROM patients WHERE patientid=%s AND doctorid=%s",
+        (patient_id, session["doctor_id"])
+    )
+    old = cur.fetchone()
+    if not old:
+        cur.close()
+        conn.close()
+        flash("Patient not found (or not yours).", "danger")
+        return redirect(url_for("patients"))
+
+    # Build a new row (clone demographics + schedule)
+    # NOTE: We intentionally DO NOT copy diagnosis; revisit is a new encounter.
+    cols = ["doctorid", "name", "gender", "dateofbirth", "weight", "allergies"]
+    vals = [
+        session["doctor_id"],
+        old.get("name"),
+        old.get("gender"),
+        old.get("dateofbirth"),
+        old.get("weight"),
+        old.get("allergies"),
+    ]
+
+    # Optional columns if they exist
+    if "height" in patient_cols:
+        cols.append("height"); vals.append(old.get("height"))
+
+    if "smoker" in patient_cols:
+        cols.append("smoker"); vals.append(old.get("smoker"))
+
+    if "symptoms" in patient_cols:
+        cols.append("symptoms"); vals.append(old.get("symptoms"))
+
+    # Scheduling
+    if "visit_date" in patient_cols:
+        cols.append("visit_date"); vals.append(new_date)
+
+    if "visit_time" in patient_cols:
+        cols.append("visit_time"); vals.append(None)
+
+    if "visited" in patient_cols:
+        cols.append("visited"); vals.append(0)
+
+    # Mark revisit + link back
+    if "is_revisit" in patient_cols:
+        cols.append("is_revisit"); vals.append(1)
+
+    if "revisit_from" in patient_cols:
+        cols.append("revisit_from"); vals.append(patient_id)
+
+    # Optionally carry radiology image forward (usually you DON'T, but you can)
+    if "radiology_image" in patient_cols and old.get("radiology_image"):
+        cols.append("radiology_image"); vals.append(old.get("radiology_image"))
+
+    placeholders = ", ".join(["%s"] * len(cols))
+    col_sql = ", ".join(cols)
+
+    cur.execute(
+        f"INSERT INTO patients ({col_sql}) VALUES ({placeholders})",
+        tuple(vals)
+    )
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    flash("Revisit scheduled (new upcoming appointment created).", "success")
     return redirect(url_for("patients"))
 
 
