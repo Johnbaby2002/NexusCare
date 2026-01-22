@@ -1,42 +1,186 @@
-{% extends "base.html" %} {% block title %}EHR Info · NexusCare{% endblock %} {%
-block content %}
+{# templates/ehr_info.html #}
+{% extends "base.html" %}
+{% block title %}EHR Info · NexusCare{% endblock %}
+
+{% block content %}
 <div class="page-head">
   <div>
-    <h2 class="page-title">EHR Information</h2>
-    <p class="page-sub">What an EHR stores and why it matters.</p>
+    <h2 class="page-title">EHR Info</h2>
+    <p class="page-sub">What data NexusCare stores and how the record lifecycle works.</p>
   </div>
 </div>
 
-<div class="cardx p-4">
-  <div class="fw-bold mb-2">
-    <i class="bi bi-journal-medical me-2"></i>What is an EHR?
-  </div>
-  <p class="page-sub">
-    An Electronic Health Record (EHR) is a digital chart that supports clinical
-    workflows by storing demographics, symptoms, history, vitals, allergies,
-    labs, imaging references, and billing-related data.
-  </p>
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    <div class="cardx p-4">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <div class="badge badge-soft px-3 py-2 mb-3">
+            <i class="bi bi-journal-medical me-1"></i> Electronic Health Record
+          </div>
+          <h3 class="fw-bold mb-2">Patient record model</h3>
+          <p class="hint mb-0" style="font-size: 0.95rem;">
+            In NexusCare, an EHR is handled as a practical clinical record: demographics + visit scheduling + symptoms and notes,
+            with optional imaging upload. The system is doctor-scoped, so each doctor sees only their own patient list.
+          </p>
+        </div>
+      </div>
 
-  <div class="fw-bold mt-4 mb-2">
-    <i class="bi bi-shield-lock me-2"></i>Security & Privacy
-  </div>
-  <ul>
-    <li>Authentication: doctor login with password hashing</li>
-    <li>Authorization: each doctor sees only their own patients</li>
-    <li>Extendable with audit logs</li>
-  </ul>
+      <hr style="border-color: var(--border)" />
 
-  <div class="fw-bold mt-4 mb-2">
-    <i class="bi bi-clipboard2-pulse me-2"></i>Project Fields
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3 h-100">
+            <div class="fw-bold mb-2"><i class="bi bi-person-badge me-2"></i>Demographics</div>
+            <div class="hint mb-0">
+              Name, gender, date of birth, and derived age are used across the dashboard and patient list views.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3 h-100">
+            <div class="fw-bold mb-2"><i class="bi bi-activity me-2"></i>Vitals & personal stats</div>
+            <div class="hint mb-0">
+              Weight (and height when available) are stored in the patient record and shown in the patient details modal.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3 h-100">
+            <div class="fw-bold mb-2"><i class="bi bi-calendar2-check me-2"></i>Scheduling</div>
+            <div class="hint mb-0">
+              Visit date and visit time drive the appointment buckets on the dashboard and the Upcoming vs Visited split.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3 h-100">
+            <div class="fw-bold mb-2"><i class="bi bi-clipboard2-pulse me-2"></i>Clinical notes</div>
+            <div class="hint mb-0">
+              Symptoms are displayed prominently for fast triage, and diagnosis / SOAP-style notes can be captured during updates.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-2"><i class="bi bi-shield-plus me-2"></i>Allergies & risk flags</div>
+            <div class="hint mb-0" style="font-size: 0.95rem;">
+              Allergies are captured through a structured selection plus an optional free-text add-on, which keeps common entries fast
+              while still allowing realistic edge cases.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-2"><i class="bi bi-image me-2"></i>Radiology image support</div>
+            <div class="hint mb-0" style="font-size: 0.95rem;">
+              A patient record can include an uploaded radiology image (stored in the uploads folder and referenced in the database),
+              which keeps the project closer to real EHR workflows.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border)" />
+
+      <h4 class="fw-bold mb-2">Record lifecycle</h4>
+      <p class="hint" style="font-size: 0.95rem;">
+        The workflow is built around fast CRUD actions. A doctor can create a patient record, read it from lists and the patient details modal,
+        update it through the edit form, and delete it when needed. The visited status controls whether a record appears in Upcoming or Visited,
+        and the dashboard uses the same scheduling data to show appointments by date buckets.
+      </p>
+
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-plus-circle me-2"></i>Create</div>
+            <div class="hint mb-0">
+              Add Patient captures demographics, scheduling, symptoms/notes, allergies, and optional imaging.
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-eye me-2"></i>Read</div>
+            <div class="hint mb-0">
+              Patient lists + a click-to-open modal provide instant access without leaving the current page.
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-pencil-square me-2"></i>Update</div>
+            <div class="hint mb-0">
+              Edit Patient updates medical and scheduling data, including visit status and clinical notes.
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-trash me-2"></i>Delete</div>
+            <div class="hint mb-0">
+              Deleting removes the record from the doctor’s scope in the database.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border)" />
+
+      <h4 class="fw-bold mb-2">Revisit scheduling</h4>
+      <p class="hint mb-0" style="font-size: 0.95rem;">
+        NexusCare supports revisit scheduling as a clean continuation of care. Instead of overwriting a completed visit, the system creates a new
+        upcoming encounter based on the same patient information and places it back into the appointment pipeline. This keeps history intact while
+        making follow-ups feel natural in the workflow.
+      </p>
+    </div>
   </div>
-  <ul class="mb-0">
-    <li>Inputs: name, weight, height</li>
-    <li>Symptoms: datalist autocomplete + free typing</li>
-    <li>Checkbox: smoker, visited</li>
-    <li>Radio: gender</li>
-    <li>Date + datepicker: DOB and visit date</li>
-    <li>Textarea: other allergies / notes</li>
-    <li>Image upload: radiology attachment</li>
-  </ul>
+
+  <div class="col-12 col-lg-4">
+    <div class="cardx p-4">
+      <div class="fw-bold mb-2"><i class="bi bi-stack me-2"></i>System snapshot</div>
+      <div class="hint mb-3">High-level view of what the doctor interacts with inside NexusCare.</div>
+
+      <div class="cardx p-3 mb-3">
+        <div class="fw-bold mb-1">Dashboard</div>
+        <div class="hint mb-0">
+          Appointment buckets, counts, and quick access to patient details.
+        </div>
+      </div>
+
+      <div class="cardx p-3 mb-3">
+        <div class="fw-bold mb-1">Patients</div>
+        <div class="hint mb-0">
+          Upcoming vs Visited lists with fast actions and triage context.
+        </div>
+      </div>
+
+      <div class="cardx p-3 mb-3">
+        <div class="fw-bold mb-1">Patient details modal</div>
+        <div class="hint mb-0">
+          One-click view of key fields without navigating away.
+        </div>
+      </div>
+
+      <div class="cardx p-3">
+        <div class="fw-bold mb-1">Secure session flow</div>
+        <div class="hint mb-0">
+          Login establishes a doctor session and scopes all records to that user.
+        </div>
+      </div>
+    </div>
+
+    <div class="cardx p-4 mt-3">
+      <div class="fw-bold mb-2"><i class="bi bi-people-fill me-2"></i>Team</div>
+      <div class="hint mb-0">
+        John Baby Nayathodan (Frontend), Joyel Raju (Backend), Tanjib Alim Bhuiyan (Database).
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

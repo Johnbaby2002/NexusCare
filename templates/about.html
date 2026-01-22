@@ -1,33 +1,134 @@
-{% extends "base.html" %} {% block title %}About · Handy EHR{% endblock %} {%
-block content %}
+{# templates/about.html #}
+{% extends "base.html" %}
+{% block title %}About · NexusCare{% endblock %}
+
+{% block content %}
 <div class="page-head">
   <div>
-    <h2 class="page-title">About</h2>
-    <p class="page-sub">
-      Handmade EHR information system from a doctor’s perspective.
-    </p>
+    <h2 class="page-title">About NexusCare</h2>
+    <p class="page-sub">A lightweight Electronic Health Record system focused on clarity, speed, and clean workflows.</p>
   </div>
 </div>
 
-<div class="cardx p-4">
-  <div class="fw-bold mb-2">
-    <i class="bi bi-hospital me-2"></i>Project Summary
-  </div>
-  <p class="page-sub">
-    NexusCare is a lightweight electronic health record system built using
-    HTML5, CSS3, Bootstrap 5, Flask (Python), and MySQL/MariaDB. It supports
-    doctor registration/login and doctor-scoped CRUD operations on patient
-    records, with symptoms-driven workflow and visit status (Upcoming vs
-    Visited).
-  </p>
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="cardx p-4">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <div class="badge badge-soft px-3 py-2 mb-3">
+            <i class="bi bi-heart-pulse me-1"></i> EHR Web App
+          </div>
+          <h3 class="fw-bold mb-2">Designed for real clinical flow</h3>
+          <p class="hint mb-0" style="font-size: 0.95rem;">
+            NexusCare was built to keep the interface calm while still showing the information a doctor needs quickly:
+            appointments, triage context, patient demographics, symptoms, allergies, and encounter updates — all in a few clicks.
+          </p>
+        </div>
+      </div>
 
-  <div class="fw-bold mt-4 mb-2">
-    <i class="bi bi-stack me-2"></i>Tech Stack
+      <hr style="border-color: var(--border)" />
+
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-grid-1x2 me-2"></i>Dashboard-first</div>
+            <div class="hint mb-0">
+              The dashboard groups appointments by time buckets and surfaces recent activity so the doctor can start instantly.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-people me-2"></i>Patient-centric CRUD</div>
+            <div class="hint mb-0">
+              Add, view, update, revisit, and remove records in a simple flow while keeping the UI consistent across pages.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-clipboard2-pulse me-2"></i>Triage-friendly layout</div>
+            <div class="hint mb-0">
+              Symptoms and visit status stay visible in the places where quick decisions are made.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="cardx p-3">
+            <div class="fw-bold mb-1"><i class="bi bi-shield-check me-2"></i>Doctor-scoped access</div>
+            <div class="hint mb-0">
+              Records are shown only for the logged-in doctor session, keeping data separated and focused.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border)" />
+
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge badge-muted px-3 py-2"><i class="bi bi-bootstrap me-1"></i>Bootstrap UI</span>
+        <span class="badge badge-muted px-3 py-2"><i class="bi bi-filetype-html me-1"></i>Jinja Templates</span>
+        <span class="badge badge-muted px-3 py-2"><i class="bi bi-code-slash me-1"></i>Flask Routing</span>
+        <span class="badge badge-muted px-3 py-2"><i class="bi bi-database me-1"></i>MySQL Storage</span>
+      </div>
+    </div>
   </div>
-  <ul class="mb-0">
-    <li>Frontend: HTML5, CSS3, Bootstrap 5, minimal JavaScript</li>
-    <li>Backend: Python + Flask</li>
-    <li>Database: MySQL / MariaDB</li>
-  </ul>
+
+  <div class="col-12 col-lg-5">
+    <div class="cardx p-4">
+      <div class="fw-bold mb-2"><i class="bi bi-people-fill me-2"></i>Team</div>
+      <div class="hint mb-3">NexusCare was delivered as a team build with clear ownership across layers.</div>
+
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="cardx p-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-bold">John Baby Nayathodan</div>
+                <div class="hint">Frontend</div>
+              </div>
+              <span class="badge badge-soft px-3 py-2"><i class="bi bi-palette me-1"></i>UI / UX</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="cardx p-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-bold">Joyel Raju</div>
+                <div class="hint">Backend</div>
+              </div>
+              <span class="badge badge-muted px-3 py-2"><i class="bi bi-braces me-1"></i>Routes / Logic</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="cardx p-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-bold">Tanjib Alim Bhuiyan</div>
+                <div class="hint">Database</div>
+              </div>
+              <span class="badge badge-muted px-3 py-2"><i class="bi bi-diagram-3 me-1"></i>Schema</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border)" />
+
+      <div class="fw-bold mb-2"><i class="bi bi-award me-2"></i>What makes it feel “clinical”</div>
+      <p class="hint mb-0" style="font-size: 0.95rem;">
+        The goal wasn’t to overload the interface with everything. It’s to show the right things at the right moment:
+        appointments grouped by date, patient details available via modal, and a revisit flow that creates a new upcoming
+        encounter without messing up the history.
+      </p>
+    </div>
+  </div>
 </div>
 {% endblock %}

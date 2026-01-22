@@ -483,14 +483,14 @@ def add_patient():
         symptoms = (request.form.get("symptoms") or "").strip()
         diagnosis = (request.form.get("diagnosis") or "").strip()
 
-        # ✅ SOAP notes
-        soap_subjective = (request.form.get("soap_subjective") or "").strip()
-        soap_objective = (request.form.get("soap_objective") or "").strip()
-        soap_assessment = (request.form.get("soap_assessment") or "").strip()
-        soap_plan = (request.form.get("soap_plan") or "").strip()
-
         allergies_list = request.form.getlist("allergies")
         extra_allergies = (request.form.get("extra_allergies") or "").strip()
+
+        # Billing (keep everything inside POST block!)
+        billing_amount = (request.form.get("billing_amount") or "").strip()
+        billing_status = (request.form.get("billing_status") or "").strip()
+        billing_notes = (request.form.get("billing_notes") or "").strip()
+        billing_invoice = (request.form.get("billing_invoice") or "").strip()
 
         if not name or not gender or not dob:
             flash("Name, gender, and date of birth are required.", "danger")
@@ -513,39 +513,50 @@ def add_patient():
             radiology_filename = f"doc{session['doctor_id']}_{stamp}_{safe}"
             file.save(os.path.join(UPLOAD_FOLDER, radiology_filename))
 
-        # Dynamic INSERT (safe if columns missing)
+        # Dynamic INSERT
         cols = ["doctorid", "name", "gender", "dateofbirth", "weight", "allergies"]
         vals = [session["doctor_id"], name, gender, dob, weight, allergies]
 
         if "height" in patient_cols:
             cols.append("height"); vals.append(height)
+
         if "visit_date" in patient_cols:
-            cols.append("visit_date"); vals.append(visit_date)
+            cols.append("visit_date"); vals.append(visit_date if visit_date else None)
+
         if "visit_time" in patient_cols:
             cols.append("visit_time"); vals.append(visit_time if visit_time else None)
 
         if "smoker" in patient_cols:
             cols.append("smoker"); vals.append(smoker)
+
         if "symptoms" in patient_cols:
             cols.append("symptoms"); vals.append(symptoms)
+
         if "visited" in patient_cols:
             cols.append("visited"); vals.append(0)
 
         if "diagnosis" in patient_cols:
             cols.append("diagnosis"); vals.append(diagnosis)
 
-        # ✅ SOAP notes only if the columns exist
-        if "soap_subjective" in patient_cols:
-            cols.append("soap_subjective"); vals.append(soap_subjective)
-        if "soap_objective" in patient_cols:
-            cols.append("soap_objective"); vals.append(soap_objective)
-        if "soap_assessment" in patient_cols:
-            cols.append("soap_assessment"); vals.append(soap_assessment)
-        if "soap_plan" in patient_cols:
-            cols.append("soap_plan"); vals.append(soap_plan)
-
         if radiology_filename and "radiology_image" in patient_cols:
             cols.append("radiology_image"); vals.append(radiology_filename)
+
+        # Billing columns (only saved if the columns actually exist in DB)
+        if "billing_amount" in patient_cols:
+            cols.append("billing_amount")
+            vals.append(billing_amount if billing_amount else None)
+
+        if "billing_status" in patient_cols:
+            cols.append("billing_status")
+            vals.append(billing_status if billing_status else None)
+
+        if "billing_notes" in patient_cols:
+            cols.append("billing_notes")
+            vals.append(billing_notes if billing_notes else None)
+
+        if "billing_invoice" in patient_cols:
+            cols.append("billing_invoice")
+            vals.append(billing_invoice if billing_invoice else None)
 
         placeholders = ", ".join(["%s"] * len(cols))
         col_sql = ", ".join(cols)
@@ -594,17 +605,16 @@ def edit_patient(patient_id):
 
         symptoms = (request.form.get("symptoms") or "").strip()
         visited_flag = 1 if request.form.get("visited") else 0
-
         diagnosis = (request.form.get("diagnosis") or "").strip()
-
-        # ✅ SOAP notes
-        soap_subjective = (request.form.get("soap_subjective") or "").strip()
-        soap_objective = (request.form.get("soap_objective") or "").strip()
-        soap_assessment = (request.form.get("soap_assessment") or "").strip()
-        soap_plan = (request.form.get("soap_plan") or "").strip()
 
         allergies_list = request.form.getlist("allergies")
         extra_allergies = (request.form.get("extra_allergies") or "").strip()
+
+        # Billing
+        billing_amount = (request.form.get("billing_amount") or "").strip()
+        billing_status = (request.form.get("billing_status") or "").strip()
+        billing_notes = (request.form.get("billing_notes") or "").strip()
+        billing_invoice = (request.form.get("billing_invoice") or "").strip()
 
         if not name or not gender or not dob:
             flash("Name, gender, and date of birth are required.", "danger")
@@ -637,33 +647,44 @@ def edit_patient(patient_id):
 
         if "height" in patient_cols:
             set_parts.append("height=%s"); vals.append(height)
+
         if "visit_date" in patient_cols:
-            set_parts.append("visit_date=%s"); vals.append(visit_date)
+            set_parts.append("visit_date=%s"); vals.append(visit_date if visit_date else None)
+
         if "visit_time" in patient_cols:
             set_parts.append("visit_time=%s"); vals.append(visit_time if visit_time else None)
 
         if "smoker" in patient_cols:
             set_parts.append("smoker=%s"); vals.append(smoker)
+
         if "symptoms" in patient_cols:
             set_parts.append("symptoms=%s"); vals.append(symptoms)
+
         if "visited" in patient_cols:
             set_parts.append("visited=%s"); vals.append(visited_flag)
 
         if "diagnosis" in patient_cols:
             set_parts.append("diagnosis=%s"); vals.append(diagnosis)
 
-        # ✅ SOAP notes only if the columns exist
-        if "soap_subjective" in patient_cols:
-            set_parts.append("soap_subjective=%s"); vals.append(soap_subjective)
-        if "soap_objective" in patient_cols:
-            set_parts.append("soap_objective=%s"); vals.append(soap_objective)
-        if "soap_assessment" in patient_cols:
-            set_parts.append("soap_assessment=%s"); vals.append(soap_assessment)
-        if "soap_plan" in patient_cols:
-            set_parts.append("soap_plan=%s"); vals.append(soap_plan)
-
         if radiology_filename and "radiology_image" in patient_cols:
             set_parts.append("radiology_image=%s"); vals.append(radiology_filename)
+
+        # Billing columns
+        if "billing_amount" in patient_cols:
+            set_parts.append("billing_amount=%s")
+            vals.append(billing_amount if billing_amount else None)
+
+        if "billing_status" in patient_cols:
+            set_parts.append("billing_status=%s")
+            vals.append(billing_status if billing_status else None)
+
+        if "billing_notes" in patient_cols:
+            set_parts.append("billing_notes=%s")
+            vals.append(billing_notes if billing_notes else None)
+
+        if "billing_invoice" in patient_cols:
+            set_parts.append("billing_invoice=%s")
+            vals.append(billing_invoice if billing_invoice else None)
 
         vals.extend([patient_id, session["doctor_id"]])
 

@@ -1,5 +1,4 @@
-{% extends "base.html" %}
-{% block title %}Dashboard · NexusCare{% endblock %}
+{% extends "base.html" %} {% block title %}Dashboard · NexusCare{% endblock %}
 {% block content %}
 
 <div class="page-head">
@@ -16,30 +15,69 @@
   </div>
 </div>
 
+<!-- KPI STRIP -->
 <div class="row g-3 mb-3">
-  <div class="col-12 col-md-6 col-lg-4">
+  <div class="col-12 col-md-3">
     <div class="cardx p-4 h-100">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-start justify-content-between">
         <div>
           <div class="hint">Total Patients</div>
-          <div class="fs-3 fw-bold">{{ stats.total_patients }}</div>
+          <div class="fs-2 fw-bold">{{ stats.total_patients }}</div>
+          <div class="text-muted small">Dr. {{ doctor }}</div>
         </div>
         <div class="badge badge-soft px-3 py-2">
-          <i class="bi bi-people me-1"></i> Doctor-scoped
+          <i class="bi bi-people me-1"></i> Patients
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-md-6 col-lg-4">
+  <div class="col-12 col-md-3">
     <div class="cardx p-4 h-100">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-start justify-content-between">
         <div>
-          <div class="hint">Recent Patients</div>
-          <div class="fs-3 fw-bold">{{ stats.recent_count }}</div>
+          <div class="hint">Appointments Today</div>
+          <div class="fs-2 fw-bold">{{ appointments_today|length }}</div>
+          <div class="text-muted small">Waiting / scheduled</div>
         </div>
         <div class="badge badge-muted px-3 py-2">
-          <i class="bi bi-clock-history me-1"></i> Latest
+          <i class="bi bi-calendar-check me-1"></i> Today
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <div class="hint">Next 7 days</div>
+          <div class="fs-2 fw-bold">{{ appointments_7day|length }}</div>
+          <div class="text-muted small">{{ week_start }}–{{ week_end }}</div>
+        </div>
+        <div class="badge badge-soft px-3 py-2">
+          <i class="bi bi-calendar2-week me-1"></i> Week
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-3">
+    <div class="cardx p-4 h-100">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <div class="hint">Clinical Alerts</div>
+          <div class="fs-2 fw-bold">{{ alerts|length }}</div>
+          <div class="text-muted small">
+            {% if alerts and alerts|length > 0 %}
+              Needs review
+            {% else %}
+              All clear
+            {% endif %}
+          </div>
+        </div>
+        <div class="badge badge-soft px-3 py-2">
+          <i class="bi bi-exclamation-triangle me-1"></i> Alerts
         </div>
       </div>
     </div>
@@ -47,159 +85,420 @@
 </div>
 
 <div class="row g-3">
+  <!-- LEFT: APPOINTMENTS -->
   <div class="col-12 col-lg-7">
     <div class="cardx p-4 h-100">
-      <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="fw-bold">
           <i class="bi bi-calendar2-week me-2"></i>Appointments
         </div>
         <span class="badge badge-muted">By day</span>
       </div>
 
+      <!-- Tabs -->
       <ul class="nav nav-pills mb-3" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab_yesterday">
-            Yesterday <span class="badge badge-muted ms-2">{{ appointments_yesterday|length }}</span>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            data-bs-toggle="pill"
+            data-bs-target="#tab_yesterday"
+            type="button"
+            role="tab"
+          >
+            Yesterday
+            <span class="badge badge-muted ms-2"
+              >{{ appointments_yesterday|length }}</span
+            >
           </button>
         </li>
-        <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab_today">
-            Today <span class="badge badge-soft ms-2">{{ appointments_today|length }}</span>
+
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            data-bs-toggle="pill"
+            data-bs-target="#tab_today"
+            type="button"
+            role="tab"
+          >
+            Today
+            <span class="badge badge-soft ms-2"
+              >{{ appointments_today|length }}</span
+            >
           </button>
         </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab_tomorrow">
-            Tomorrow <span class="badge badge-muted ms-2">{{ appointments_tomorrow|length }}</span>
+
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            data-bs-toggle="pill"
+            data-bs-target="#tab_tomorrow"
+            type="button"
+            role="tab"
+          >
+            Tomorrow
+            <span class="badge badge-muted ms-2"
+              >{{ appointments_tomorrow|length }}</span
+            >
           </button>
         </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab_7day">
-            7 day ({{ week_start }}–{{ week_end }})
-            <span class="badge badge-muted ms-2">{{ appointments_7day|length }}</span>
+
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            data-bs-toggle="pill"
+            data-bs-target="#tab_7day"
+            type="button"
+            role="tab"
+          >
+            7 day
+            <span class="badge badge-muted ms-2"
+              >{{ appointments_7day|length }}</span
+            >
           </button>
         </li>
       </ul>
 
       <div class="tab-content">
-        {% for tab, items in [
-          ('yesterday', appointments_yesterday),
-          ('today', appointments_today),
-          ('tomorrow', appointments_tomorrow),
-          ('7day', appointments_7day)
-        ] %}
-        <div class="tab-pane fade {% if tab == 'today' %}show active{% endif %}" id="tab_{{ tab }}">
+        <!-- YESTERDAY -->
+        <div class="tab-pane fade" id="tab_yesterday" role="tabpanel">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
-                  <th style="width:140px">Time</th>
+                  <th style="width: 130px">Time</th>
                   <th>Patient</th>
-                  <th style="width:160px">Date</th>
-                  <th style="width:140px" class="text-end">Status</th>
+                  <th style="width: 160px">Date</th>
+                  <th style="width: 160px" class="text-end">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {% for a in items %}
-                <tr>
-                  <td class="fw-semibold">{{ a.visit_time if a.visit_time else "—" }}</td>
-                  <td>
-                    <a
-  href="#"
-  class="fw-semibold text-decoration-none js-patient-details"
-  data-bs-toggle="modal"
-  data-bs-target="#patientDetailsModal"
-  data-patient-id="{{ a.patientid }}"
-  data-patient-name="{{ a.name|e }}"
-  data-patient-gender="{{ a.gender if a.gender else '' }}"
-  data-patient-dob="{{ a.dateofbirth if a.dateofbirth else '' }}"
-  data-patient-smoker="{{ 'Yes' if a.smoker in [1, '1', True] else 'No' if a.smoker in [0, '0', False] else '' }}"
-  data-patient-weight="{{ a.weight if a.weight is not none else '' }}"
-  data-patient-height="{{ a.height if a.height is not none else '' }}"
-  data-patient-allergies="{{ a.allergies|e if a.allergies else '' }}"
-  data-patient-visit-date="{{ a.visit_date if a.visit_date else '' }}"
-  data-patient-visit-time="{{ a.visit_time if a.visit_time else '' }}"
-  data-patient-symptoms="{{ a.symptoms|e if a.symptoms else '' }}"
-  data-patient-edit-url="{{ url_for('edit_patient', patient_id=a.patientid) }}"
->
-  {{ a.name }}
-</a>
-
-                  </td>
-                  <td><span class="badge badge-muted">{{ a.visit_date if a.visit_date else "—" }}</span></td>
-                  <td class="text-end">
-                    {% if a.visited %}
-                      <span class="badge badge-soft">Visited</span>
-                    {% else %}
-                      <span class="badge badge-muted">Scheduled</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
+                {% if appointments_yesterday and appointments_yesterday|length > 0 %}
+                  {% for a in appointments_yesterday %}
+                  <tr>
+                    <td class="fw-semibold">
+                      {{ a.visit_time if a.visit_time else "—" }}
+                    </td>
+                    <td>
+                      <a
+                        href="#"
+                        class="fw-semibold text-decoration-none js-patient-details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#patientDetailsModal"
+                        data-patient-id="{{ a.patientid }}"
+                        data-patient-name="{{ a.name|e }}"
+                        data-patient-visit-date="{{ a.visit_date if a.visit_date else '' }}"
+                        data-patient-visit-time="{{ a.visit_time if a.visit_time else '' }}"
+                        data-patient-symptoms="{{ a.symptoms|e if a.symptoms else '' }}"
+                        data-patient-edit-url="{{ url_for('edit_patient', patient_id=a.patientid) }}"
+                      >
+                        {{ a.name }}
+                      </a>
+                      <div class="hint">
+                        <i class="bi bi-clipboard2-pulse me-1"></i>
+                        {{ a.symptoms if a.symptoms else "—" }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-muted">
+                        {{ a.visit_date if a.visit_date else "—" }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      {% if a.visited %}
+                        <span class="badge badge-soft">
+                          <i class="bi bi-check2-circle me-1"></i>Visited
+                        </span>
+                      {% else %}
+                        <span class="badge badge-muted">Not marked</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-5">
+                      <div class="fw-bold">No appointments</div>
+                    </td>
+                  </tr>
+                {% endif %}
               </tbody>
             </table>
           </div>
         </div>
-        {% endfor %}
+
+        <!-- TODAY -->
+        <div class="tab-pane fade show active" id="tab_today" role="tabpanel">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 130px">Time</th>
+                  <th>Patient</th>
+                  <th style="width: 160px">Date</th>
+                  <th style="width: 160px" class="text-end">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if appointments_today and appointments_today|length > 0 %}
+                  {% for a in appointments_today %}
+                  <tr>
+                    <td class="fw-semibold">
+                      {{ a.visit_time if a.visit_time else "—" }}
+                    </td>
+                    <td>
+                      <a
+                        href="#"
+                        class="fw-semibold text-decoration-none js-patient-details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#patientDetailsModal"
+                        data-patient-id="{{ a.patientid }}"
+                        data-patient-name="{{ a.name|e }}"
+                        data-patient-visit-date="{{ a.visit_date if a.visit_date else '' }}"
+                        data-patient-visit-time="{{ a.visit_time if a.visit_time else '' }}"
+                        data-patient-symptoms="{{ a.symptoms|e if a.symptoms else '' }}"
+                        data-patient-edit-url="{{ url_for('edit_patient', patient_id=a.patientid) }}"
+                      >
+                        {{ a.name }}
+                      </a>
+                      <div class="hint">
+                        <i class="bi bi-clipboard2-pulse me-1"></i>
+                        {{ a.symptoms if a.symptoms else "—" }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-muted">
+                        {{ a.visit_date if a.visit_date else "—" }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge badge-soft">
+                        <i class="bi bi-hourglass-split me-1"></i>Waiting
+                      </span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-5">
+                      <div class="fw-bold">No appointments</div>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TOMORROW -->
+        <div class="tab-pane fade" id="tab_tomorrow" role="tabpanel">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 130px">Time</th>
+                  <th>Patient</th>
+                  <th style="width: 160px">Date</th>
+                  <th style="width: 160px" class="text-end">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if appointments_tomorrow and appointments_tomorrow|length > 0 %}
+                  {% for a in appointments_tomorrow %}
+                  <tr>
+                    <td class="fw-semibold">
+                      {{ a.visit_time if a.visit_time else "—" }}
+                    </td>
+                    <td>
+                      <a
+                        href="#"
+                        class="fw-semibold text-decoration-none js-patient-details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#patientDetailsModal"
+                        data-patient-id="{{ a.patientid }}"
+                        data-patient-name="{{ a.name|e }}"
+                        data-patient-visit-date="{{ a.visit_date if a.visit_date else '' }}"
+                        data-patient-visit-time="{{ a.visit_time if a.visit_time else '' }}"
+                        data-patient-symptoms="{{ a.symptoms|e if a.symptoms else '' }}"
+                        data-patient-edit-url="{{ url_for('edit_patient', patient_id=a.patientid) }}"
+                      >
+                        {{ a.name }}
+                      </a>
+                      <div class="hint">
+                        <i class="bi bi-clipboard2-pulse me-1"></i>
+                        {{ a.symptoms if a.symptoms else "—" }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-muted">
+                        {{ a.visit_date if a.visit_date else "—" }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge badge-muted">Scheduled</span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-5">
+                      <div class="fw-bold">No appointments</div>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 7 DAY -->
+        <div class="tab-pane fade" id="tab_7day" role="tabpanel">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 130px">Time</th>
+                  <th>Patient</th>
+                  <th style="width: 160px">Date</th>
+                  <th style="width: 160px" class="text-end">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if appointments_7day and appointments_7day|length > 0 %}
+                  {% for a in appointments_7day %}
+                  <tr>
+                    <td class="fw-semibold">
+                      {{ a.visit_time if a.visit_time else "—" }}
+                    </td>
+                    <td>
+                      <a
+                        href="#"
+                        class="fw-semibold text-decoration-none js-patient-details"
+                        data-bs-toggle="modal"
+                        data-bs-target="#patientDetailsModal"
+                        data-patient-id="{{ a.patientid }}"
+                        data-patient-name="{{ a.name|e }}"
+                        data-patient-visit-date="{{ a.visit_date if a.visit_date else '' }}"
+                        data-patient-visit-time="{{ a.visit_time if a.visit_time else '' }}"
+                        data-patient-symptoms="{{ a.symptoms|e if a.symptoms else '' }}"
+                        data-patient-edit-url="{{ url_for('edit_patient', patient_id=a.patientid) }}"
+                      >
+                        {{ a.name }}
+                      </a>
+                      <div class="hint">
+                        <i class="bi bi-clipboard2-pulse me-1"></i>
+                        {{ a.symptoms if a.symptoms else "—" }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge badge-muted">
+                        {{ a.visit_date if a.visit_date else "—" }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge badge-muted">Scheduled</span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-5">
+                      <div class="fw-bold">No appointments</div>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact footer strip -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted small">
+          <i class="bi bi-shield-check me-1"></i> Session active
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('patients') }}">
+          <i class="bi bi-arrow-right me-1"></i> Manage schedule
+        </a>
       </div>
     </div>
   </div>
 
+  <!-- RIGHT: RECENT + ALERTS -->
   <div class="col-12 col-lg-5">
-    <div class="cardx p-4 mb-3">
-      <div class="d-flex justify-content-between mb-2">
-        <div class="fw-bold"><i class="bi bi-person-lines-fill me-2"></i>Recent Activity</div>
-        <a href="{{ url_for('patients') }}">Open</a>
-      </div>
-
-      {% if recent_patients %}
-      <div class="list-group list-group-flush">
-        {% for p in recent_patients %}
-        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-          <div>
-            <a
-  href="#"
-  class="fw-semibold text-decoration-none js-patient-details"
-  data-bs-toggle="modal"
-  data-bs-target="#patientDetailsModal"
-  data-patient-id="{{ p.patientid }}"
-  data-patient-name="{{ p.name|e }}"
-  data-patient-gender="{{ p.gender if p.gender else '' }}"
-  data-patient-dob="{{ p.dateofbirth if p.dateofbirth else '' }}"
-  data-patient-smoker="{{ 'Yes' if p.smoker in [1, '1', True] else 'No' if p.smoker in [0, '0', False] else '' }}"
-  data-patient-weight="{{ p.weight if p.weight is not none else '' }}"
-  data-patient-height="{{ p.height if p.height is not none else '' }}"
-  data-patient-allergies="{{ p.allergies|e if p.allergies else '' }}"
-  data-patient-visit-date="{{ p.visit_date if p.visit_date else '' }}"
-  data-patient-visit-time="{{ p.visit_time if p.visit_time else '' }}"
-  data-patient-symptoms="{{ p.symptoms|e if p.symptoms else '' }}"
-  data-patient-edit-url="{{ url_for('edit_patient', patient_id=p.patientid) }}"
->
-  {{ p.name }}
-</a>
-
-            <div class="hint">#{{ p.patientid }} · {{ p.gender }} · {{ p.dateofbirth }}</div>
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="cardx p-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-bold">
+              <i class="bi bi-person-lines-fill me-2"></i>Recent Activity
+            </div>
+            <a class="text-decoration-none" href="{{ url_for('patients') }}">Open</a>
           </div>
-          <a class="btn btn-outline-primary btn-sm"
-             href="{{ url_for('edit_patient', patient_id=p.patientid) }}">
-            Edit
-          </a>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-    </div>
 
-    <div class="cardx p-4">
-      <div class="fw-bold mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Clinical Alerts</div>
-      {% if alerts %}
-        <ul class="mb-0 ps-3">
-          {% for msg in alerts %}
-          <li>{{ msg }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <div class="hint">—</div>
-      {% endif %}
+          {% if recent_patients and recent_patients|length > 0 %}
+          <div class="list-group list-group-flush">
+            {% for p in recent_patients %}
+            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+              <div class="me-3">
+                <a
+                  href="#"
+                  class="fw-semibold text-decoration-none js-patient-details"
+                  data-bs-toggle="modal"
+                  data-bs-target="#patientDetailsModal"
+                  data-patient-id="{{ p.patientid }}"
+                  data-patient-name="{{ p.name|e }}"
+                  data-patient-gender="{{ p.gender if p.gender else '' }}"
+                  data-patient-dob="{{ p.dateofbirth if p.dateofbirth else '' }}"
+                  data-patient-symptoms="{{ p.symptoms|e if p.symptoms else '' }}"
+                  data-patient-edit-url="{{ url_for('edit_patient', patient_id=p.patientid) }}"
+                >
+                  {{ p.name }}
+                </a>
+                <div class="text-muted small">
+                  #{{ p.patientid }}{% if p.gender %} · {{ p.gender }}{% endif %}{% if p.dateofbirth %} · DOB: {{ p.dateofbirth }}{% endif %}
+                </div>
+                <div class="hint">
+                  <i class="bi bi-clipboard2-pulse me-1"></i>{{ p.symptoms if p.symptoms else "—" }}
+                </div>
+              </div>
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('edit_patient', patient_id=p.patientid) }}">
+                <i class="bi bi-pencil-square me-1"></i>Edit
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <div class="fw-bold mb-1">No recent patients</div>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('add_patient') }}">
+              <i class="bi bi-plus-circle me-1"></i>Add Patient
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="cardx p-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-bold">
+              <i class="bi bi-exclamation-triangle me-2"></i>Alerts
+            </div>
+            <span class="badge badge-muted">{{ alerts|length }}</span>
+          </div>
+
+          {% if alerts and alerts|length > 0 %}
+            <ul class="mb-0 ps-3">
+              {% for msg in alerts %}
+              <li class="mb-2">{{ msg }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted small">No alerts detected.</div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>
